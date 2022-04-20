@@ -20,13 +20,97 @@ grid_y_level = 0
 planets = []
 
 # Adding specific planets manually on the ecliptic plane
+
+# Sun
 planets.append(Planet(
     'Sun',
     position=Vector(0,0,0),
-    mass=100,
-    radius=0.5,
+    mass=500,
+    radius=1,
     texture_path='sun.jpg'
 ))
+
+# Mercury
+planets.append(Planet(
+    'Mercury',
+    position=Vector(2,0,2),
+    mass=5,
+    radius=0.1,
+    texture_path='mercury.jpg'
+))
+
+# Venus
+planets.append(Planet(
+    'Venus',
+    position=Vector(3,0,3),
+    mass=50,
+    radius=0.4,
+    texture_path='venus.jpg'
+))
+
+# Earth
+planets.append(Planet(
+    'Earth',
+    position=Vector(4,0,4),
+    mass=50,
+    radius=0.4,
+    texture_path='earth.jpg'
+))
+
+# Mars
+planets.append(Planet(
+    'Mars',
+    position=Vector(5,0,5),
+    mass=30,
+    radius=0.3,
+    texture_path='mars.jpg'
+))
+
+# Jupiter
+planets.append(Planet(
+    'Jupiter',
+    position=Vector(6,0,6),
+    mass=100,
+    radius=0.8,
+    texture_path='jupiter.jpg'
+))
+
+# Saturn
+planets.append(Planet(
+    'Saturn',
+    position=Vector(7,0,7),
+    mass=80,
+    radius=0.7,
+    texture_path='saturn.jpg'
+))
+
+# Neptune
+planets.append(Planet(
+    'Neptune',
+    position=Vector(8,0,8),
+    mass=60,
+    radius=0.6,
+    texture_path='neptune.jpg'
+))
+
+# Uranus
+planets.append(Planet(
+    'Uranus',
+    position=Vector(9,0,9),
+    mass=40,
+    radius=0.5,
+    texture_path='uranus.jpg'
+))
+
+# Pluto
+planets.append(Planet(
+    'Pluto',
+    position=Vector(10,0,10),
+    mass=10,
+    radius=0.1,
+    texture_path='pluto.jpg'
+))
+
 
 # for i in range(100):
 #     planets.append(Planet(
@@ -103,8 +187,9 @@ def on_draw():
 
     
     # sphere at 0,1,0
-    glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-    glColor3f(1,1,0)
+    # @Josh this made the planets wireframe, commented it out and the textures rendered correctly
+    # glPolygonMode( GL_FRONT_AND_BACK, GL_LINE)
+    glColor3f(1,1,1)
     
     for planet in planets:
         glPushMatrix()
@@ -115,10 +200,11 @@ def on_draw():
         glBindTexture(texture.target, texture.id)
         quadric = gluNewQuadric()
         gluQuadricTexture(quadric, GL_TRUE)
-        gluSphere(quadric, planet.radius, 1000, 1000)
+        gluQuadricNormals(quadric, GL_SMOOTH)
+        gluSphere(quadric, planet.radius, 100, 100)
         glPopMatrix()
     
-    glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+    glPolygonMode( GL_FRONT_AND_BACK, GL_FILL )
 
     # coordinate overlay
     glColor3f(1.0, 1.0, 1.0)
