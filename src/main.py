@@ -1,5 +1,5 @@
 from pyglet.window import Window, key, mouse
-from pyglet import app, event, clock, text
+from pyglet import app, event, clock, text, image
 from pyglet.gl import *
 import math, random
 
@@ -18,16 +18,26 @@ grid_cells_side = 50
 grid_y_level = 0
 
 planets = []
-for i in range(100):
-    planets.append(Planet(
-        position=Vector(
-            random.random()*10 - 5,
-            random.random()*10 - 5,
-            random.random()*10 - 5
-        ), 
-        mass=100, 
-        radius=1
-    ))
+
+# Adding specific planets manually on the ecliptic plane
+planets.append(Planet(
+    'Sun',
+    position=Vector(0,0,0),
+    mass=100,
+    radius=0.5,
+    texture_path='sun.jpg'
+))
+
+# for i in range(100):
+#     planets.append(Planet(
+#         position=Vector(
+#             random.random()*10 - 5,
+#             random.random()*10 - 5,
+#             random.random()*10 - 5
+#         ), 
+#         mass=100, 
+#         radius=1
+#     ))
 
 
 window = Window(
@@ -99,8 +109,13 @@ def on_draw():
     for planet in planets:
         glPushMatrix()
         glTranslatef(*planet.position)
+        pic = image.load('textures/'+planet.texture_path)
+        texture = pic.get_texture()
+        glEnable(texture.target)
+        glBindTexture(texture.target, texture.id)
         quadric = gluNewQuadric()
-        gluSphere(quadric, 0.1, 10, 10)
+        gluQuadricTexture(quadric, GL_TRUE)
+        gluSphere(quadric, planet.radius, 1000, 1000)
         glPopMatrix()
     
     glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
@@ -124,7 +139,7 @@ def on_draw():
         anchor_y='top')
     draw_label(window, label)
 
-def camera_controler(dt):
+def camera_controller(dt):
     dist = dt * camera_movement_speed
 
     if keys[key.A]:
@@ -149,7 +164,7 @@ def camera_controler(dt):
         camera_position.y -= dist
 
 def update(dt):
-    camera_controler(dt)
+    camera_controller(dt)
 
 clock.schedule_interval(update, 1/120.0)
 app.run()
