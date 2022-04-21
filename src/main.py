@@ -123,6 +123,9 @@ planets.append(Planet(
 #         radius=1
 #     ))
 
+for planet in planets:
+    pic = image.load('textures/' + planet.texture_path)
+    planet.texture = pic.get_texture()
 
 window = Window(
     width=640,
@@ -134,7 +137,7 @@ keys = key.KeyStateHandler()
 window.push_handlers(keys)
 
 glEnable(GL_DEPTH_TEST)
-glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+glPolygonMode( GL_FRONT_AND_BACK, GL_FILL )
 
 
 def draw_grid():
@@ -185,23 +188,24 @@ def on_draw():
     # grid
     draw_grid()
 
-    
-    # sphere at 0,1,0
-    # @Josh this made the planets wireframe, commented it out and the textures rendered correctly
+    # Wireframe mode:
     # glPolygonMode( GL_FRONT_AND_BACK, GL_LINE)
+
+    # Fill mode:
+    glPolygonMode( GL_FRONT_AND_BACK, GL_FILL )
+
     glColor3f(1,1,1)
     
     for planet in planets:
         glPushMatrix()
         glTranslatef(*planet.position)
-        pic = image.load('textures/'+planet.texture_path)
-        texture = pic.get_texture()
+        texture = planet.texture
         glEnable(texture.target)
         glBindTexture(texture.target, texture.id)
         quadric = gluNewQuadric()
         gluQuadricTexture(quadric, GL_TRUE)
         gluQuadricNormals(quadric, GL_SMOOTH)
-        gluSphere(quadric, planet.radius, 100, 100)
+        gluSphere(quadric, planet.radius, 20, 20)
         glPopMatrix()
     
     glPolygonMode( GL_FRONT_AND_BACK, GL_FILL )

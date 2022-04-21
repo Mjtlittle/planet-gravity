@@ -8,4 +8,5 @@ class Planet:
         self.mass = mass
         self.radius = radius
         self.texture_path = texture_path
+        self.texture = None
         
