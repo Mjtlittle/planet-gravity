@@ -123,9 +123,6 @@ planets.append(Planet(
 #         radius=1
 #     ))
 
-for planet in planets:
-    pic = image.load('textures/' + planet.texture_path)
-    planet.texture = pic.get_texture()
 
 window = Window(
     width=640,
