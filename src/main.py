@@ -1,11 +1,13 @@
 from pyglet.window import Window, key, mouse
-from pyglet import app, event, clock, text
+from pyglet import app, event, clock, text, graphics, shapes
 from pyglet.gl import *
 import math
 
 from planet import Planet
-from utility import draw_label
+from utility import *
 from vector import Vector
+
+
 
 
 camera_position = Vector(0, 3, 1)
@@ -62,8 +64,11 @@ window = Window(
     caption="Planet Gravity"
 )
 
+batch = graphics.Batch()
+
 glEnable(GL_DEPTH_TEST)
 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+
 
 @window.event
 def on_resize(width, height):
@@ -136,6 +141,7 @@ def on_draw():
     if (show_ui):
         draw_grid()
         draw_overlay()
+        batch.draw()
 
 def draw_overlay():
     lines = [
@@ -158,6 +164,8 @@ def draw_overlay():
             anchor_y='top')
         draw_label(window, label)
     
+    draw_buttons(window)
+        
 def draw_grid():
     glPushMatrix()
     glLineWidth(1)
@@ -205,8 +213,21 @@ def draw_planet(planet: Planet):
 
 # todo: maybe just a vector that pokes from surface of each planet
 def draw_planet_velocity(planet: Planet):
-    glPushMatrix()
-    glPopMatrix()
+    pass
+    # glPushMatrix()
+    # glLoadIdentity()
+
+    # # render the text
+    # label = text.Label('Test_Label',
+    #     font_name='Arial',
+    #     font_size=100,
+    #     x=planet.position.x,
+    #     y=planet.position.y)
+    # label.draw()
+
+    # glPopMatrix()
+    # draw_label(window, label)
+
 
 def draw_planet_trail(planet: Planet):
     glPushMatrix()
@@ -225,12 +246,13 @@ def draw_planets():
     for planet in planets:
         draw_planet(planet)
         draw_planet_trail(planet)
+        draw_planet_velocity(planet)
 
 def step_planets(dt):
 
     G = 1 # gravitational constant
     
-    # calculte each planets velocity
+    # calculate each planet's velocity
     # (ie. applying forces imposed by other planets)
     # this is bruteforced O(N^2) for now
     for planet in planets:
@@ -319,4 +341,5 @@ def update(dt):
 
 clock.schedule_interval(update, 1/120.0)
 app.run()
+
 
