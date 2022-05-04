@@ -370,7 +370,7 @@ def draw_planet(planet: Planet):
     quadric = gluNewQuadric()
     gluQuadricTexture(quadric, GL_TRUE)
     gluQuadricNormals(quadric, GL_SMOOTH)
-    gluSphere(quadric, planet.radius, 20, 20)
+    gluSphere(quadric, planet.radius, 30, 30)
 
     # disable texture
     glDisable(texture.target)
@@ -442,8 +442,7 @@ def step_planets(dt):
         if abs(planet.velocity) > t_vel:
             planet.velocity = planet.velocity.normalize() * t_vel
 
-    # rotate each planet
-    # idk, made it proportional to mass
+    # rotate each planet proportional to mass
     for planet in planets:
         planet.rotation += planet.mass / 500 + 0.2
 
