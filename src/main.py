@@ -2,6 +2,7 @@ from pyglet.window import Window, key, mouse
 from pyglet import app, event, clock, text, graphics, shapes
 from pyglet.gl import *
 import math
+import ctypes
 
 from planet import Planet
 from utility import *
@@ -24,10 +25,24 @@ steps_per_frame = 5
 step_resolution = 1
 playing = True
 show_ui = True
+sun_only = True
 
-planets = [
+window = Window(
+    width=640 * 2,
+    height=480 * 2,
+    resizable=True,
+    caption="Planet Gravity"
+)
 
-    # just for testing
+batch = graphics.Batch()
+
+glEnable(GL_DEPTH_TEST)
+glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+
+
+
+# Simulation parameters
+demo_system = [
     Planet(
         'fake earth',
         position=Vector(5,5,10),
@@ -47,7 +62,7 @@ planets = [
         radius=0.3,
     ),
     Planet(
-        'sun',
+        'Sun',
         position=Vector(0,0,0),
         velocity=Vector(0,0,0),
         texture_path='sun.jpg',
@@ -57,18 +72,132 @@ planets = [
     )
 ]
 
-window = Window(
-    width=640 * 2,
-    height=480 * 2,
-    resizable=True,
-    caption="Planet Gravity"
-)
+solar_system = [Planet(
+    'Sun',
+    position=Vector(0,0,0),
+    velocity=Vector(0,0,0),
+    mass=70,
+    radius=2,
+    texture_path='sun.jpg'
+),Planet(
+    'Mercury',
+    position=Vector(8,0,8),
+    velocity=Vector(1.8,0,-1.8),
+    mass=0.01,
+    radius=0.2,
+    color=(128/255,127/255,127/255),
+    texture_path='mercury.jpg'
+),Planet(
+    'Venus',
+    position=Vector(14,0,14),
+    velocity=Vector(1.3,0,-1.3),
+    mass=0.5,
+    radius=.6,
+    color=(194/255,105/255,35/255),
+    texture_path='venus.jpg'
+),Planet(
+    'Earth',
+    position=Vector(20,0,20),
+    velocity=Vector(1.1,0,-1.1),
+    texture_path='earth.jpg',
+    color=(64/255,184/255,197/255),
+    mass=2,
+    radius=0.6,
+),Planet(
+    'Mars',
+    position=Vector(25,0,25),
+    velocity=Vector(1,0,-1),
+    mass=0.3,
+    radius=.5,
+    color=(140/255,52/255,36/255),
+    texture_path='mars.jpg'
+),Planet(
+    'Jupiter',
+    position=Vector(50,0,50),
+    velocity=Vector(.7,0,-.7),
+    mass=100,
+    radius=1.3,
+    color=(163/255,117/255,72/255),
+    texture_path='jupiter.jpg'
+),Planet(
+    'Saturn',
+    position=Vector(60,0,60),
+    velocity=Vector(.64,0,-.64),
+    mass=6,
+    radius=1.1,
+    color=(255/255,234/255,205/255),
+    texture_path='saturn.jpg'
+),Planet(
+    'Neptune',
+    position=Vector(80,0,80),
+    velocity=Vector(.56,0,-.56),
+    mass=1,
+    radius=.9,
+    color=(65/255,125/255,211/255),
+    texture_path='neptune.jpg'
+),Planet(
+    'Uranus',
+    position=Vector(93,0,93),
+    velocity=Vector(.52,0,-.52),
+    mass=1,
+    radius=.9,
+    color=(164/255,212/255,220/255),
+    texture_path='uranus.jpg'
+),Planet(
+    'Pluto',
+    position=Vector(89,0,89),
+    velocity=Vector(.65,0,-.65),
+    mass=0.05,
+    radius=0.1,
+    color=(105/255,115/255,127/255),
+    texture_path='pluto.jpg'
+)]
 
-batch = graphics.Batch()
+inner_solar_system = solar_system[:5]
 
-glEnable(GL_DEPTH_TEST)
-glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+alpha_centauri = [
+    Planet(
+        'Alpha Centauri A',
+        position=Vector(-10,0,20),
+        velocity=Vector(-.3,0,-.3),
+        mass=20,
+        radius=3,
+        texture_path='gstar.jpg'
+    ),Planet(
+        'Alpha Centauri B',
+        position=Vector(10,0,-10),
+        velocity=Vector(.3,0,.3),
+        mass=10,
+        radius=2,
+        texture_path='kstar.jpg'
+    ),Planet(
+        'Proxima Centauri',
+        position=Vector(-30,0,-15),
+        velocity=Vector(.5,0,-.1),
+        mass=1,
+        radius=1,
+        texture_path='mstar.jpg'
+    )
+]
 
+planets = demo_system.copy()
+
+def set_normal_light():
+    glShadeModel(GL_SMOOTH)
+    glEnable(GL_LIGHTING)
+    glEnable(GL_DEPTH_TEST)
+    lightZeroPosition = (ctypes.c_float*4)(*(0.0,0.0,0.0,0.0))
+    lightZeroColor = (ctypes.c_float*4)(*(1.0,1.0,1.0,1.0))
+    lightConstantAttenuation = (ctypes.c_float*4)(*(1.0,1.0,1.0,1.0))
+    glLightfv(GL_LIGHT0, GL_POSITION, lightZeroPosition)
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, lightZeroColor)
+    glLightfv(GL_LIGHT0, GL_CONSTANT_ATTENUATION, lightConstantAttenuation)
+    glEnable(GL_LIGHT0)
+
+def set_full_bright():
+    glDisable(GL_LIGHTING)
+
+set_full_bright()
 
 @window.event
 def on_resize(width, height):
@@ -107,7 +236,7 @@ def handle_key_press(symbol, modifiers):
 
     # global def here is annoying, in ideal world 
     # all logic in main would be incapsulated in a class
-    global steps_per_frame, playing, show_ui
+    global steps_per_frame, playing, show_ui, sun_only, planets
 
     # increase or decrease steps per frame with - and =
     if symbol == key.MINUS:
@@ -123,6 +252,28 @@ def handle_key_press(symbol, modifiers):
     # toggle ui
     if symbol == key.ENTER:
         show_ui = not show_ui
+
+    # switch planetary systems
+    if symbol == key._1:
+        planets = solar_system.copy()
+    if symbol == key._2:
+        planets = inner_solar_system.copy()
+    if symbol == key._3:
+        planets = alpha_centauri.copy()
+        set_full_bright()
+    if symbol == key._4:
+        planets = demo_system.copy()
+    
+    # toggle interplanetary gravitation
+    if symbol == key.G:
+        sun_only = not sun_only
+    
+    # toggle lighting
+    if symbol == key.L:
+        if glIsEnabled(GL_LIGHTING) or planets == alpha_centauri:
+            set_full_bright()
+        else:
+            set_normal_light()
 
 window.push_handlers(keys)
 window.push_handlers(on_key_press=handle_key_press)
@@ -150,7 +301,16 @@ def draw_overlay():
         f'Camera XYZ: {camera_position.x:0.2f}, {camera_position.y:0.2f}, {camera_position.z:0.2f}',
         f'Planets: {len(planets)}',
         f'Steps per Frame (-,=): {steps_per_frame}',
-        'Toggle UI with enter'
+        'Toggle Interplanetary Gravity with g: ' + ('[OFF]' if sun_only else '[ON]'),
+        'Toggle UI with enter',
+        'Toggle lighting with L',
+        '',
+        'Simulations (Enter the number):',
+        '1. Solar System',
+        '2. Inner Solar System',
+        '3. Alpha Centauri (Trinary Star System)',
+        '4. Demo System'
+
     ]
     
     glColor3f(1.0, 1.0, 1.0)
@@ -164,7 +324,6 @@ def draw_overlay():
             anchor_y='top')
         draw_label(window, label)
     
-    draw_buttons(window)
         
 def draw_grid():
     glPushMatrix()
@@ -188,6 +347,12 @@ def draw_grid():
 
 def draw_planet(planet: Planet):
     glPushMatrix()
+
+    if planet.name == 'Sun':
+        materialEmission = (ctypes.c_float*4)(*(1.0,1.0,1.0,1.0))
+        glMaterialfv(GL_FRONT, GL_EMISSION, materialEmission)
+    else:
+        glMaterialfv(GL_FRONT, GL_DIFFUSE, (ctypes.c_float*4)(*(0.8,0.8,0.8,0.8)))
 
     # load the texture
     texture = planet.texture
@@ -242,8 +407,11 @@ def draw_planet_trail(planet: Planet):
 def draw_planets():
     glPolygonMode( GL_FRONT_AND_BACK, GL_FILL )
     glColor3f(1,1,1)
-    
+
+    sun = planets[0]
     for planet in planets:
+        if (planet.position - sun.position).magnitude() < 1 and planet.name != sun.name:
+            planets.remove(planet)
         draw_planet(planet)
         draw_planet_trail(planet)
         draw_planet_velocity(planet)
@@ -261,8 +429,8 @@ def step_planets(dt):
         F_sum = Vector.Zero()
         for other in planets:
 
-            # skip if same planet
-            if other == planet:
+            # skip if same planet or if gravity disabled between planets
+            if other == planet or (sun_only and other.name not in ['Sun','sun','Alpha Centauri A','Alpha Centauri B','Proxima Centauri']):
                 continue
                 
             diff = other.position - planet.position
