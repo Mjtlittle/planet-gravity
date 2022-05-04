@@ -18,7 +18,7 @@ camera_fast_speed_scale = 3
 camera_rotation_speed = 0.2
 
 grid_cell_size = 1
-grid_cells_side = 50
+grid_cells_side = 500
 grid_y_level = 0
 
 steps_per_frame = 5
@@ -38,8 +38,6 @@ batch = graphics.Batch()
 
 glEnable(GL_DEPTH_TEST)
 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
-
-
 
 # Simulation parameters
 demo_system = [
@@ -65,8 +63,8 @@ demo_system = [
         'Sun',
         position=Vector(0,0,0),
         velocity=Vector(0,0,0),
-        texture_path='sun.jpg',
-        color=(1,1,0),
+        texture_path='tstar.jpg',
+        # color=(1,1,0),
         mass=50,
         radius=2,
     )
@@ -182,22 +180,6 @@ alpha_centauri = [
 
 planets = demo_system.copy()
 
-def set_normal_light():
-    glShadeModel(GL_SMOOTH)
-    glEnable(GL_LIGHTING)
-    glEnable(GL_DEPTH_TEST)
-    lightZeroPosition = (ctypes.c_float*4)(*(0.0,0.0,0.0,0.0))
-    lightZeroColor = (ctypes.c_float*4)(*(1.0,1.0,1.0,1.0))
-    lightConstantAttenuation = (ctypes.c_float*4)(*(1.0,1.0,1.0,1.0))
-    glLightfv(GL_LIGHT0, GL_POSITION, lightZeroPosition)
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, lightZeroColor)
-    glLightfv(GL_LIGHT0, GL_CONSTANT_ATTENUATION, lightConstantAttenuation)
-    glEnable(GL_LIGHT0)
-
-def set_full_bright():
-    glDisable(GL_LIGHTING)
-
-set_full_bright()
 
 @window.event
 def on_resize(width, height):
@@ -218,10 +200,6 @@ def on_mouse_drag(x, y, dx, dy, buttons, modifiers):
 def on_mouse_scroll(x, y, scroll_x, scroll_y):
 
     scroll_y *= -1
-
-    # not the most elegant, same as moving code
-    # just fiddled with trig until worked lol
-    # pretty sure camera rot is being done wrong
 
     vert_rot = math.radians(camera_rotation.y + 90)
     ud_rot = math.radians(-camera_rotation.x + 90)
@@ -260,20 +238,12 @@ def handle_key_press(symbol, modifiers):
         planets = inner_solar_system.copy()
     if symbol == key._3:
         planets = alpha_centauri.copy()
-        set_full_bright()
     if symbol == key._4:
         planets = demo_system.copy()
     
     # toggle interplanetary gravitation
     if symbol == key.G:
         sun_only = not sun_only
-    
-    # toggle lighting
-    if symbol == key.L:
-        if glIsEnabled(GL_LIGHTING) or planets == alpha_centauri:
-            set_full_bright()
-        else:
-            set_normal_light()
 
 window.push_handlers(keys)
 window.push_handlers(on_key_press=handle_key_press)
@@ -292,7 +262,6 @@ def on_draw():
     if (show_ui):
         draw_grid()
         draw_overlay()
-        batch.draw()
 
 def draw_overlay():
     lines = [
@@ -303,14 +272,12 @@ def draw_overlay():
         f'Steps per Frame (-,=): {steps_per_frame}',
         'Toggle Interplanetary Gravity with g: ' + ('[OFF]' if sun_only else '[ON]'),
         'Toggle UI with enter',
-        'Toggle lighting with L',
         '',
         'Simulations (Enter the number):',
         '1. Solar System',
         '2. Inner Solar System',
         '3. Alpha Centauri (Trinary Star System)',
         '4. Demo System'
-
     ]
     
     glColor3f(1.0, 1.0, 1.0)
@@ -328,7 +295,7 @@ def draw_overlay():
 def draw_grid():
     glPushMatrix()
     glLineWidth(1)
-    glColor3f(0.2,0.2,0.2)
+    glColor3f(0.1,0.1,0.1)
     glBegin(GL_LINES)
 
     ww = grid_cell_size * grid_cells_side
@@ -347,12 +314,6 @@ def draw_grid():
 
 def draw_planet(planet: Planet):
     glPushMatrix()
-
-    if planet.name == 'Sun':
-        materialEmission = (ctypes.c_float*4)(*(1.0,1.0,1.0,1.0))
-        glMaterialfv(GL_FRONT, GL_EMISSION, materialEmission)
-    else:
-        glMaterialfv(GL_FRONT, GL_DIFFUSE, (ctypes.c_float*4)(*(0.8,0.8,0.8,0.8)))
 
     # load the texture
     texture = planet.texture
@@ -376,23 +337,6 @@ def draw_planet(planet: Planet):
     
     glPopMatrix()
 
-# todo: maybe just a vector that pokes from surface of each planet
-def draw_planet_velocity(planet: Planet):
-    pass
-    # glPushMatrix()
-    # glLoadIdentity()
-
-    # # render the text
-    # label = text.Label('Test_Label',
-    #     font_name='Arial',
-    #     font_size=100,
-    #     x=planet.position.x,
-    #     y=planet.position.y)
-    # label.draw()
-
-    # glPopMatrix()
-    # draw_label(window, label)
-
 
 def draw_planet_trail(planet: Planet):
     glPushMatrix()
@@ -406,7 +350,7 @@ def draw_planet_trail(planet: Planet):
 
 def draw_planets():
     glPolygonMode( GL_FRONT_AND_BACK, GL_FILL )
-    glColor3f(1,1,1)
+    # glColor3f(1,1,1)
 
     sun = planets[0]
     for planet in planets:
@@ -414,7 +358,6 @@ def draw_planets():
             planets.remove(planet)
         draw_planet(planet)
         draw_planet_trail(planet)
-        draw_planet_velocity(planet)
 
 def step_planets(dt):
 
@@ -427,6 +370,7 @@ def step_planets(dt):
 
         # calculate sum of all forces
         F_sum = Vector.Zero()
+
         for other in planets:
 
             # skip if same planet or if gravity disabled between planets
